@@ -1,0 +1,21 @@
+{
+  "name": "shopsmart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ShopSmart - full-stack e-commerce demo used to show dialectics & skepticism in bug hunting.",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently -n SERVER,CLIENT -c magenta,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "typecheck": "npm --prefix server run typecheck && npm --prefix client run typecheck",
+    "test:add": "node scripts/regression-add-to-cart.mjs",
+    "start": "concurrently -n SERVER,CLIENT -c magenta,cyan \"npm:start:server\" \"npm:start:client\"",
+    "start:server": "npm --prefix server run start",
+    "start:client": "npm --prefix client run preview"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

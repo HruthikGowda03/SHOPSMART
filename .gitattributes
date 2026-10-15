@@ -1,0 +1,12 @@
+# Keep line endings consistent so the Vercel (Linux) build matches what was
+# committed from this Windows machine.
+* text=auto eol=lf
+
+# Images are binary - never touch them.
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.ico binary
+
+# Lockfiles are large but must stay exact.
+*.json text eol=lf
