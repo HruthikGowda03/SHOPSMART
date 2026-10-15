@@ -260,11 +260,44 @@ Shipping rules (server controlled): flat ₹49, free at ₹1,500 and above.
 
 ## 11. Deploying to Vercel
 
+### The project is deployed as two services
+
+`vercel.json` at the repository root declares a **multi-service** deployment:
+
+```json
+"services": {
+  "client": { "root": "client", "framework": "vite", "buildCommand": "npm run build" },
+  "server": { "root": "server", "framework": "express", "runtime": "nodejs",
+              "entrypoint": "index.js", "buildCommand": "npm run build" }
+},
+"rewrites": [
+  { "source": "/api/(.*)", "destination": { "service": "server" } },
+  { "source": "/(.*)",     "destination": { "service": "client" } }
+]
+```
+
+* **`client`** - the Vite single-page app. It is built to `client/dist` and served as static
+  files.
+* **`server`** - the Express API. `server/index.js` exports the compiled app from
+  `server/dist/app.js`; it is never called with `listen()`, because Vercel runs it as a
+  function. `npm run dev` and `npm start` are unchanged and still use `src/index.ts`.
+* **Routing** - one domain, two services. `/api/*` reaches the server, everything else
+  reaches the client. Order matters: the specific rewrite first, the catch-all last.
+
+`server/src/app.ts` mounts its router under **both** `/api` and `/`. On Vercel the prefix is
+normally kept, but the second mount means the routes also resolve if it is ever stripped
+before the request reaches the service.
+
+**No service bindings are needed.** A binding would inject the target's internal URL into
+the calling service, but `client/src/api.ts` already calls relative paths (`/api/...`) and the
+rewrite routes them on the same domain. That is the right design here: bindings are injected
+into functions at runtime, and the browser bundle cannot receive an injected value at all.
+
 ### How the API survives serverless functions
 
-Vercel runs `api/index.mjs` as a **serverless function**: every request can arrive on a
-different instance, and instances are recycled when idle. Anything kept only in a variable
-would disappear between two requests (empty carts, mode snapping back to "fixed").
+Vercel runs the `server` service as a function: every request can arrive on a different
+instance, and instances are recycled when idle. Anything kept only in a variable would
+disappear between two requests (empty carts, mode snapping back to "fixed").
 
 ShopSmart therefore sends no state of its own between requests. The demo state - cart
 contents, demonstration mode, stock levels, order list - travels back to the browser in a
@@ -304,13 +337,16 @@ heavy is uploaded. `.env.example` is committed on purpose - it only contains a p
 ### Step 2 - import into Vercel
 
 1. Go to <https://vercel.com/new> and sign in with GitHub.
-2. Import the `shopsmart` repository (Vercel detects everything from `vercel.json`).
-3. Leave **Framework Preset: Other**, **Build Command: `npm run build`**, **Output
-   Directory: `client/dist`** - they are already in `vercel.json`.
-4. Deploy.
+2. Import the `shopsmart` repository. Vercel reads `vercel.json` and detects **two services**
+   (`client` and `server`) - do not set Framework Preset, Build Command or Output Directory,
+   they all live in the service definitions.
+3. Deploy.
 
 You get one URL that serves both the website and the API, e.g. `https://shopsmart.vercel.app`
-(`/` = website, `/api/*` = serverless function).
+(`/` = the client service, `/api/*` = the server service).
+
+If you prefer to check the routing locally first, `npx vercel dev` starts both services with
+the same rewrites and injects the environment variables.
 
 ### Step 3 - set the session secret
 

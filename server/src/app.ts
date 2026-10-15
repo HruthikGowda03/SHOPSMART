@@ -3,7 +3,7 @@
  *
  * Kept separate from index.ts so that:
  *   - local dev can call app.listen() and get hot reloads (tsx watch)
- *   - Vercel can import the same app as a serverless function (see api/index.mjs)
+ *   - Vercel's `server` service loads the same app (see server/index.js)
  *
  * The session middleware makes the API stateless: the mutable store is rebuilt
  * from a signed, httpOnly cookie before every request and written back after,
@@ -82,7 +82,13 @@ export function createApp() {
     });
   });
 
+  // Locally the API lives at /api/*. On Vercel the /api/* rewrite forwards the
+  // request to this service, and depending on the platform setup the prefix is
+  // either kept or stripped. Mounting the same router under both paths means
+  // the routes resolve either way; Express stops at whichever matches first,
+  // so nothing is ever handled twice.
   app.use('/api', router);
+  app.use('/', router);
 
   // Central error handler: every failure becomes a friendly JSON payload.
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

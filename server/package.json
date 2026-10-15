@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Express + TypeScript API for the ShopSmart dialectics / skepticism demo.",
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",

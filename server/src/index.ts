@@ -1,7 +1,7 @@
 /**
  * Local development / self-hosted entry point.
  *
- * On Vercel the same app is loaded by api/index.mjs as a serverless function
+ * On Vercel the same app is loaded by server/index.js as a serverless function
  * instead of being listened on here.
  */
 
