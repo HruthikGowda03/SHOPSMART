@@ -57,6 +57,7 @@ npm run build      # type-check + build both projects (production output)
 npm run typecheck  # TypeScript errors only, both projects
 npm start          # run the built backend + a preview of the built website
 npm run test:add   # regression tests for the Add to Cart quantity (servers must be running)
+npm run check:deploy  # checks vercel.json + the Vercel server entrypoint before you deploy
 ```
 
 ---
@@ -292,6 +293,19 @@ before the request reaches the service.
 the calling service, but `client/src/api.ts` already calls relative paths (`/api/...`) and the
 rewrite routes them on the same domain. That is the right design here: bindings are injected
 into functions at runtime, and the browser bundle cannot receive an injected value at all.
+
+**One non-obvious rule about the server entrypoint.** Vercel's Express builder decides which
+file is the entrypoint by *reading its source text* and looking for a direct
+`import ... from 'express'` - it never follows the import graph. A file that only re-exports
+the built app is rejected with *"No entrypoint found which imports express"*, so
+`server/index.js` imports express itself (a no-op at runtime, since `dist/app.js` loads it
+anyway). `npm run check:deploy` re-runs Vercel's own detection rule against this repository,
+along with the rewrite order and the "no build/runtime keys at the top level" rule, so this
+stays caught locally rather than during a production build.
+
+The `client` service sets its `buildCommand` on purpose: the Vite preset's default is
+`vite build`, which skips `tsc -b`. `npm run build` runs `tsc -b && vite build`, so a type
+error fails the deploy instead of shipping.
 
 ### How the API survives serverless functions
 

@@ -11,6 +11,7 @@
     "build": "npm --prefix server run build && npm --prefix client run build",
     "typecheck": "npm --prefix server run typecheck && npm --prefix client run typecheck",
     "test:add": "node scripts/regression-add-to-cart.mjs",
+    "check:deploy": "node scripts/check-vercel-config.mjs",
     "start": "concurrently -n SERVER,CLIENT -c magenta,cyan \"npm:start:server\" \"npm:start:client\"",
     "start:server": "npm --prefix server run start",
     "start:client": "npm --prefix client run preview"
