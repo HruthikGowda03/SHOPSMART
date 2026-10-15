@@ -62,6 +62,25 @@ check(
   `order: ${rewrites.map((r) => r.source).join(' -> ')}`,
 );
 
+// ------------------------------------------------------------------- runtimes
+// A service's `runtime` is a *lambda runtime* identifier (e.g. "nodejs24.x",
+// "python3.14"), never a framework slug - naming a framework or a bare
+// language there fails the deployment with
+//   Error: Service "server" has invalid runtime "nodejs".
+// Vercel auto-detects the runtime, so the correct move is to leave it out and
+// let `framework` decide which builder runs.
+const LAMBDA_RUNTIME = /^(nodejs\d+(\.\d+)*\.?x?|bun\d+(\.\d+)*|python3\.\d+|edge|container)$/i;
+for (const [name, service] of Object.entries(services)) {
+  const runtime = service?.runtime;
+  check(
+    `service "${name}" does not declare an invalid runtime`,
+    runtime === undefined || LAMBDA_RUNTIME.test(runtime),
+    runtime === undefined
+      ? 'not set, auto-detected'
+      : `"${runtime}"${LAMBDA_RUNTIME.test(runtime) ? '' : ' is not a lambda runtime identifier'}`,
+  );
+}
+
 // -------------------------------------------- @vercel/express entrypoint lookup
 const serverRoot = join(root, 'server');
 const serverConfig = services.server ?? {};

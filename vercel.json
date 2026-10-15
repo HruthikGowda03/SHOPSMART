@@ -9,7 +9,6 @@
     "server": {
       "root": "server",
       "framework": "express",
-      "runtime": "nodejs",
       "entrypoint": "index.js",
       "buildCommand": "npm run build"
     }

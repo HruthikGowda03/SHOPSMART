@@ -268,7 +268,7 @@ Shipping rules (server controlled): flat ₹49, free at ₹1,500 and above.
 ```json
 "services": {
   "client": { "root": "client", "framework": "vite", "buildCommand": "npm run build" },
-  "server": { "root": "server", "framework": "express", "runtime": "nodejs",
+  "server": { "root": "server", "framework": "express",
               "entrypoint": "index.js", "buildCommand": "npm run build" }
 },
 "rewrites": [
@@ -306,6 +306,16 @@ stays caught locally rather than during a production build.
 The `client` service sets its `buildCommand` on purpose: the Vite preset's default is
 `vite build`, which skips `tsc -b`. `npm run build` runs `tsc -b && vite build`, so a type
 error fails the deploy instead of shipping.
+
+**Do not set `runtime` on a service.** It expects a *lambda runtime* identifier
+(`nodejs24.x`, `python3.14`), not a framework slug - `"runtime": "nodejs"` fails the
+deployment with `Service "server" has invalid runtime "nodejs"`. Vercel auto-detects the
+runtime, and `framework: "express"` is what selects the Express builder, so the key is simply
+omitted. `npm run check:deploy` rejects an unrecognised runtime value before you push.
+
+Vercel's routing docs confirm the service receives the **original** path (`GET /api/users`
+arrives as `/api/users`, not `/users`), so the `/api` mount in `server/src/app.ts` is the one
+that serves requests; the extra `/` mount is a harmless safety net.
 
 ### How the API survives serverless functions
 
